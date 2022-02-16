@@ -1,8 +1,8 @@
-#include <ca_rand.h>
+#include "ca_rand.h"
 #include <stdlib.h>
 #include <float.h>
 #include <math.h>
-#include <dSFMT/dSFMT.h>
+#include "dSFMT/dSFMT.h"
 
 
 struct CARandCtx {
@@ -12,7 +12,7 @@ struct CARandCtx {
 
 struct CARandCtx* ca_rand_create()
 {
-	struct CARandCtx* ctx = malloc(sizeof(*ctx));
+	struct CARandCtx* ctx = (struct CARandCtx*)malloc(sizeof(*ctx));
 	ca_rand_seed(ctx, 0);
 	return ctx;
 }
