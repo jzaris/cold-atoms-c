@@ -8,12 +8,14 @@
 #include <fstream>
 #include "doppler.h"
 #include <random>
+#include <chrono>
 //doppler cooling of aingle particle in 1D
 
 #define SQR(a) ((a) * (a))
 #define CA_LARGE_N 128
 
 using namespace std;
+using namespace std::chrono;
 
 ofstream outfile;
 
@@ -54,6 +56,7 @@ int main()
 	outfile.open("doppler_vel.dat", ios::out | ios::binary);
 	double this_vx;
 	//outfile << dt << " ";
+	auto start = high_resolution_clock::now();
 	for(int i=0; i<20000;i++){
 		//cout << "forcez: " << f[2]; 
 		f[0] =0.0;
@@ -66,6 +69,9 @@ int main()
 		this_vx = v[0];
 	}
 	cout << "final vx: " << this_vx;
+	auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop-start);
+        cout << "Time to run simulation: " << duration.count() << endl;
 	outfile.close();
 	return 1;
 }
@@ -180,7 +186,9 @@ static void add_radiation_pressure_small_n(int i,
         double recoil[3] = { 0.0 };
         int l, j;
 
-	std::random_device rd;                                                                                    std::mt19937 gen(rd());                                                                                   std::normal_distribution<> normal_dist{0.0,1.0};  
+	std::random_device rd;    
+	std::mt19937 gen(rd());
+	std::normal_distribution<> normal_dist{0.0,1.0};  
 
         if (0 == n) return;
         assert(n <= CA_LARGE_N);
@@ -219,7 +227,7 @@ static void add_radiation_pressure_small_n(int i,
                 recoil[l] *= hbar_k_nrm;
 		//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
         }
-	cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
+	//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
 	//cout << "pass5";
         for (l = 0; l < 3; ++l) {
 		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";

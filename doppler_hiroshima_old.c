@@ -7,15 +7,12 @@
 #include <iostream>
 #include <fstream>
 #include "doppler.h"
-#include <random>
-#include <chrono>
 //doppler cooling of aingle particle in 1D
 
 #define SQR(a) ((a) * (a))
 #define CA_LARGE_N 128
 
 using namespace std;
-using namespace std::chrono;
 
 ofstream outfile;
 
@@ -49,29 +46,19 @@ struct CARandCtx {
 
 int main()
 {	
-	//cout << k[1][0] << " ";
-	//std::random_device rd;
-	//std::mt19937 gen(rd());
-        //std::normal_distribution<> normal_dist{0.0,1.0};	
+	cout << k[1][0] << " ";
+
 	outfile.open("doppler_vel.dat", ios::out | ios::binary);
-	double this_vx;
-	//outfile << dt << " ";
-	auto start = high_resolution_clock::now();
-	for(int i=0; i<20000;i++){
+
+	outfile << dt << " ";
+	for(int i=0; i<200;i++){
 		//cout << "forcez: " << f[2]; 
 		f[0] =0.0;
 		f[1]=0.0;
 		f[2]=0.0;
-		outfile << std::fixed << std::scientific << v[0] << " "; 
-	        outfile << std::fixed << std::scientific << v[1] << " ";
-	        outfile << std::fixed << std::scientific << v[2] << " ";	
+		outfile << v[0] << " " << v[1] << " " << v[2] << " ";
 		drift_kick();
-		this_vx = v[0];
 	}
-	cout << "final vx: " << this_vx;
-	auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(stop-start);
-        cout << "Time to run simulation: " << duration.count() << endl;
 	outfile.close();
 	return 1;
 }
@@ -159,12 +146,8 @@ static void add_radiation_pressure_one(int i, struct CARandCtx* ctx, double hbar
 {
 	//cout << "add_radiation_pressure_one";
 	int actual_n;
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::poisson_distribution<> poisson_dist(nbar);
-	actual_n = poisson_dist(gen);
-	//cout << "nbar: " << nbar << " ";
-        //ca_rand_poisson(ctx, 1, nbar, &actual_n);
+	cout << nbar << " ";
+        ca_rand_poisson(ctx, 1, nbar, &actual_n);
 	//cout << actual_n << " ";
         if (actual_n > CA_LARGE_N) {
                 add_radiation_pressure_large_n(i, ctx, hbar_k_nrm, actual_n);
@@ -186,22 +169,11 @@ static void add_radiation_pressure_small_n(int i,
         double recoil[3] = { 0.0 };
         int l, j;
 
-	//std::random_device rd;
-	//std::mt19937 gen(rd());
-	//std::normal_distribution<> normal_dist{0.0,1.0};  
-
         if (0 == n) return;
         assert(n <= CA_LARGE_N);
-	//cout << "pass";
+	cout << "pass";
         ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[0][0]);
-        //for(int j = 0; j<n; j++)
-	//{
-	//	directions[0][j] = normal_dist(gen);
-	//	directions[1][j] = normal_dist(gen);
-	//	directions[2][j] = normal_dist(gen);
-	//}
-
-	ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[1][0]);
+        ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[1][0]);
         ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[2][0]);
 
         for (l = 0; l < 3; ++l) {
@@ -209,28 +181,26 @@ static void add_radiation_pressure_small_n(int i,
                         nrms[j] += SQR(directions[l][j]);
                 }
         }
-	//cout << "pass2";
+	cout << "pass2";
         for (j = 0; j < n; ++j) {
                 nrms[j] = sqrt(nrms[j]);
         }
-	//cout << "pass3";
+	cout << "pass3";
         for (l = 0; l < 3; ++l) {
                 for (j = 0; j < n; ++j) {
                         directions[l][j] /= nrms[j];
                 }
         }
-	//cout << "pass4";
+	cout << "pass4";
         for (l = 0; l < 3; ++l) {
                 for (j = 0; j < n; ++j) {
                         recoil[l] += directions[l][j];
                 }
                 recoil[l] *= hbar_k_nrm;
-		//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
         }
-	cout << "recx: " << recoil[0] << " ";
-	//cout << "pass5";
+	cout << "pass5";
         for (l = 0; l < 3; ++l) {
-		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
+		cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
                 f[l] += n * hbar_k[i][l] + recoil[l];
         }
 }
@@ -241,13 +211,13 @@ static void add_radiation_pressure_large_n(int i,
         int n)
 {
         
-	//cout << "largen";
+	cout << "largen";
 	double recoil[3];
         int l;
 
         ca_rand_gaussian(ctx, 3, 0.0, hbar_k_nrm * sqrt(n / 3.0), recoil);
         for (l = 0; l < 3; ++l) {
-		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
+		cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
                 f[l] += n * hbar_k[i][l] + recoil[l];
         }
 }
