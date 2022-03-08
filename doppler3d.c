@@ -20,7 +20,7 @@ using namespace std::chrono;
 ofstream outfile;
 
 double x[3] = {0.0,0.0,0.0};
-double v[3] = {5.0,0.0,0.0};
+double v[3] = {0.0,5.0,0.0};
 double f[3] = {0.0,0.0,0.0};
 
 double m = 87*1.67*pow(10,-27); //particle mass
@@ -31,15 +31,14 @@ double hbar = 1.0*pow(10,-34);
 double dt = 1*pow(10,-6);
 
 //Gaussian laser beam parameters
-const int num_beams = 2;
-double x0[num_beams][3] = {0.0,0.0,0.0,0.0,0.0,0.0};
-double S0[num_beams] = {0.1,0.1};
-double k[num_beams][3] = {k_const,0.0,0.0,-1*k_const,0.0,0.0};
-double hbar_k[num_beams][3] = {k_const*hbar,0.0,0.0, -k_const*hbar,0.0,0.0};
-double gam[num_beams] = {gamma_const, gamma_const};
-double sigma[num_beams] = {1.0*pow(10,-3),1.0*pow(10,-3)};
-//double delta0[num_beams] = {-0.5*gam[0],-0.5*gam[1]}; //detuning in Hz
-double delta0[2] = {-0.5*gamma_const,-0.5*gamma_const};
+const int num_beams = 6;
+double x0[num_beams][3] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+double S0[num_beams] = {0.1,0.1, 0.1,0.1, 0.1,0.1};
+double k[num_beams][3] = {k_const,0.0,0.0,-1*k_const,0.0,0.0, 0.0,k_const,0.0,0.0,-1*k_const,0.0, 0.0,0.0,k_const,0.0,0.0,-1*k_const};
+double hbar_k[num_beams][3] = {k_const*hbar,0.0,0.0,-1*k_const*hbar,0.0,0.0, 0.0,k_const*hbar,0.0,0.0,-1*k_const*hbar,0.0, 0.0,0.0,k_const*hbar,0.0,0.0,-1*k_const*hbar};
+double gam[num_beams] = {gamma_const, gamma_const, gamma_const, gamma_const, gamma_const, gamma_const};
+double sigma[num_beams] = {1.0*pow(10,-3),1.0*pow(10,-3), 1.0*pow(10,-3),1.0*pow(10,-3), 1.0*pow(10,-3),1.0*pow(10,-3)};
+double delta0[num_beams] = {-0.5*gamma_const,-0.5*gamma_const, -0.5*gamma_const,-0.5*gamma_const, -0.5*gamma_const,-0.5*gamma_const};
 ////////
 
 struct CARandCtx {
@@ -83,7 +82,7 @@ void drift_kick()
 		x[i] += 0.5*dt*v[i];
 	}
 	
-	for(int i=0; i<2; i++)
+	for(int i=0; i<num_beams; i++)
 	{
 		Radiation_Pressure(i);
 	}
@@ -186,23 +185,23 @@ static void add_radiation_pressure_small_n(int i,
         double recoil[3] = { 0.0 };
         int l, j;
 
-	//std::random_device rd;
-	//std::mt19937 gen(rd());
-	//std::normal_distribution<> normal_dist{0.0,1.0};  
+	std::random_device rd;    
+	std::mt19937 gen(rd());
+	std::normal_distribution<> normal_dist{0.0,1.0};  
 
         if (0 == n) return;
         assert(n <= CA_LARGE_N);
 	//cout << "pass";
-        ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[0][0]);
-        //for(int j = 0; j<n; j++)
-	//{
-	//	directions[0][j] = normal_dist(gen);
-	//	directions[1][j] = normal_dist(gen);
-	//	directions[2][j] = normal_dist(gen);
-	//}
+        //ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[0][0]);
+        for(int j = 0; j<n; j++)
+	{
+		directions[0][j] = normal_dist(gen);
+		directions[1][j] = normal_dist(gen);
+		directions[2][j] = normal_dist(gen);
+	}
 
-	ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[1][0]);
-        ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[2][0]);
+	//ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[1][0]);
+        //ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[2][0]);
 
         for (l = 0; l < 3; ++l) {
                 for (j = 0; j < n; ++j) {
@@ -227,7 +226,7 @@ static void add_radiation_pressure_small_n(int i,
                 recoil[l] *= hbar_k_nrm;
 		//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
         }
-	cout << "recx: " << recoil[0] << " ";
+	//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
 	//cout << "pass5";
         for (l = 0; l < 3; ++l) {
 		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";

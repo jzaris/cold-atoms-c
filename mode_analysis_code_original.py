@@ -175,6 +175,7 @@ class ModeAnalysis:
             return 0
 
         self.generate_crystal()
+        print(np.shape(self.u))
 
         self.axialEvals_raw, self.axialEvals, self.axialEvects = self.calc_axial_modes(self.u)
         self.planarEvals, self.planarEvects, self.V = self.calc_planar_modes(self.u)
