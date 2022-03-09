@@ -31,15 +31,15 @@ double hbar = 1.0*pow(10,-34);
 double dt = 1*pow(10,-6);
 
 //Gaussian laser beam parameters
-const int num_beams = 2;
-double x0[num_beams][3] = {0.0,0.0,0.0,0.0,0.0,0.0};
-double S0[num_beams] = {0.1,0.1};
-double k[num_beams][3] = {k_const,0.0,0.0,-1*k_const,0.0,0.0};
-double hbar_k[num_beams][3] = {k_const*hbar,0.0,0.0, -k_const*hbar,0.0,0.0};
-double gam[num_beams] = {gamma_const, gamma_const};
-double sigma[num_beams] = {1.0*pow(10,-3),1.0*pow(10,-3)};
+const int num_beams = 6;
+double x0[num_beams][3] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+double S0[num_beams] = {0.1,0.1,0.1,0.1,0.1,0.1};
+double k[num_beams][3] = {k_const,0.0,0.0,-1*k_const,0.0,0.0, 0.0,k_const,0.0,0.0,-1*k_const,0.0, 0.0,0.0,k_const,0.0,0.0,-1*k_const};
+double hbar_k[num_beams][3] = {k_const*hbar,0.0,0.0,-1*k_const*hbar,0.0,0.0, 0.0,k_const*hbar,0.0,0.0,-1*k_const*hbar,0.0, 0.0,0.0,k_const*hbar,0.0,0.0,-1*k_const*hbar}; 
+double gam[num_beams] = {gamma_const, gamma_const, gamma_const, gamma_const, gamma_const, gamma_const};
+double sigma[num_beams] = {1.0*pow(10,-3),1.0*pow(10,-3), 1.0*pow(10,-3),1.0*pow(10,-3), 1.0*pow(10,-3),1.0*pow(10,-3)};  
 //double delta0[num_beams] = {-0.5*gam[0],-0.5*gam[1]}; //detuning in Hz
-double delta0[2] = {-0.5*gamma_const,-0.5*gamma_const};
+double delta0[num_beams] = {-0.5*gamma_const,-0.5*gamma_const, -0.5*gamma_const,-0.5*gamma_const, -0.5*gamma_const,-0.5*gamma_const}; 
 ////////
 
 int seed[num_beams];
@@ -56,7 +56,7 @@ int main()
 {
 	
 	std::random_device rd;
-        std::mt19937 gen(rd());
+        std::mt19937 gen(rd()); //rd is the seed for the mt19937 instance
         std::uniform_int_distribution<std::mt19937::result_type> dist(1,1000000); 
         for(int i=0;i<num_beams;i++){
 		seed[i] =  dist(gen);
@@ -68,7 +68,7 @@ int main()
         for (int i =0; i < num_beams; i++){
                 ctx[i] = ca_rand_create();
 		ca_rand_seed(ctx[i], seed[i]);
-		cout << "seed: " << seed[i];
+		//cout << "seed: " << seed[i];
         }
 	
 	//ctx = ca_rand_create();
@@ -84,7 +84,7 @@ int main()
 	//outfile << dt << " ";
 	auto start = high_resolution_clock::now();
 	for(int i=0; i<20000;i++){
-		cout << i;
+		//cout << i;
 		//cout << "forcez: " << f[2]; 
 		f[0] =0.0;
 		f[1]=0.0;
@@ -110,7 +110,7 @@ void drift_kick()
 		x[i] += 0.5*dt*v[i];
 	}
 	
-	for(int i=0; i<2; i++)
+	for(int i=0; i<num_beams; i++)
 	{
 		Radiation_Pressure(i);
 	}
@@ -230,7 +230,7 @@ static void add_radiation_pressure_small_n(int i,
 	//std::normal_distribution<> normal_dist{0.0,1.0};  
 	//cout << n;
         if (0 == n) return;
-	cout << "PASS";
+	//cout << "PASS";
         assert(n <= CA_LARGE_N);
 	//cout << "pass ";
 	
@@ -272,9 +272,9 @@ static void add_radiation_pressure_small_n(int i,
                 recoil[l] *= hbar_k_nrm;
 		//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
         }
-	cout << "recx: " << recoil[0] << " ";
-	cout << "recy: " << recoil[1] << " ";
-	cout << "recz: " << recoil[2] << " ";
+	//cout << "recx: " << recoil[0] << " ";
+	//cout << "recy: " << recoil[1] << " ";
+	//cout << "recz: " << recoil[2] << " ";
 	//cout << "pass5 ";
         for (l = 0; l < 3; ++l) {
 		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
