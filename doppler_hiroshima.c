@@ -42,13 +42,39 @@ double sigma[num_beams] = {1.0*pow(10,-3),1.0*pow(10,-3)};
 double delta0[2] = {-0.5*gamma_const,-0.5*gamma_const};
 ////////
 
+int seed[num_beams];
+//int seed;
+
 struct CARandCtx {
         dsfmt_t dsfmt;
 };
 
+struct CARandCtx* ctx[num_beams];
+//struct CARandCtx* ctx;
 
 int main()
-{	
+{
+	
+	std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<std::mt19937::result_type> dist(1,1000000); 
+        for(int i=0;i<num_beams;i++){
+		seed[i] =  dist(gen);
+		cout << "seed: " << seed[i];
+	}
+	
+	//seed = dist(gen);
+
+        for (int i =0; i < num_beams; i++){
+                ctx[i] = ca_rand_create();
+		ca_rand_seed(ctx[i], seed[i]);
+		cout << "seed: " << seed[i];
+        }
+	
+	//ctx = ca_rand_create();
+	//ca_rand_seed(ctx, seed);
+
+	
 	//cout << k[1][0] << " ";
 	//std::random_device rd;
 	//std::mt19937 gen(rd());
@@ -58,6 +84,7 @@ int main()
 	//outfile << dt << " ";
 	auto start = high_resolution_clock::now();
 	for(int i=0; i<20000;i++){
+		cout << i;
 		//cout << "forcez: " << f[2]; 
 		f[0] =0.0;
 		f[1]=0.0;
@@ -158,11 +185,22 @@ void add_radiation_pressure(int i, struct CARandCtx* ctx, double nbar)
 static void add_radiation_pressure_one(int i, struct CARandCtx* ctx, double hbar_k_nrm, double nbar)
 {
 	//cout << "add_radiation_pressure_one";
+	//cout << nbar << " ";
 	int actual_n;
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::poisson_distribution<> poisson_dist(nbar);
-	actual_n = poisson_dist(gen);
+	//std::random_device rd;
+	//std::mt19937 gen(rd());
+	//std::poisson_distribution<> poisson_dist(nbar);
+	
+
+	ca_rand_poisson(ctx, 1, nbar, &actual_n);
+	//ca_rand_poisson(ctx, 1, nbar, &actual_n);
+
+
+
+	//actual_n = poisson_dist(gen);
+
+	//cout << actual_n;
+	//ca_rand_poisson(ctx, 1, nbar, &actual_n);
 	//cout << "nbar: " << nbar << " ";
         //ca_rand_poisson(ctx, 1, nbar, &actual_n);
 	//cout << actual_n << " ";
@@ -180,21 +218,25 @@ static void add_radiation_pressure_small_n(int i,
         int n)
 {
         
-	//cout << "smalln";
-	double directions[3][CA_LARGE_N];
-        double nrms[CA_LARGE_N] = { 0.0 };
+	//cout << "smalln" << " ";
+	//double directions[3][CA_LARGE_N];
+	double directions[3][n];
+        double nrms[n] = { 0.0 };
         double recoil[3] = { 0.0 };
         int l, j;
 
 	//std::random_device rd;
 	//std::mt19937 gen(rd());
 	//std::normal_distribution<> normal_dist{0.0,1.0};  
-
+	//cout << n;
         if (0 == n) return;
+	cout << "PASS";
         assert(n <= CA_LARGE_N);
-	//cout << "pass";
+	//cout << "pass ";
+	
         ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[0][0]);
-        //for(int j = 0; j<n; j++)
+        
+	//for(int j = 0; j<n; j++)
 	//{
 	//	directions[0][j] = normal_dist(gen);
 	//	directions[1][j] = normal_dist(gen);
@@ -202,24 +244,27 @@ static void add_radiation_pressure_small_n(int i,
 	//}
 
 	ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[1][0]);
-        ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[2][0]);
+        ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[2][0]);	
+	//ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[1][0]);
+        //ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[2][0]);
+        //ca_rand_gaussian(ctx, n, 0.0, 1.0, &directions[0][0]);  	
 
         for (l = 0; l < 3; ++l) {
                 for (j = 0; j < n; ++j) {
                         nrms[j] += SQR(directions[l][j]);
                 }
         }
-	//cout << "pass2";
+	//cout << "pass2 ";
         for (j = 0; j < n; ++j) {
                 nrms[j] = sqrt(nrms[j]);
         }
-	//cout << "pass3";
+	//cout << "pass3 ";
         for (l = 0; l < 3; ++l) {
                 for (j = 0; j < n; ++j) {
                         directions[l][j] /= nrms[j];
                 }
         }
-	//cout << "pass4";
+	//cout << "pass4 ";
         for (l = 0; l < 3; ++l) {
                 for (j = 0; j < n; ++j) {
                         recoil[l] += directions[l][j];
@@ -228,7 +273,9 @@ static void add_radiation_pressure_small_n(int i,
 		//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
         }
 	cout << "recx: " << recoil[0] << " ";
-	//cout << "pass5";
+	cout << "recy: " << recoil[1] << " ";
+	cout << "recz: " << recoil[2] << " ";
+	//cout << "pass5 ";
         for (l = 0; l < 3; ++l) {
 		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
                 f[l] += n * hbar_k[i][l] + recoil[l];
@@ -241,7 +288,7 @@ static void add_radiation_pressure_large_n(int i,
         int n)
 {
         
-	//cout << "largen";
+	//cout << "largen ";
 	double recoil[3];
         int l;
 
@@ -257,8 +304,9 @@ static void add_radiation_pressure_large_n(int i,
 void Radiation_Pressure(int i)
 {
 	double inten = gaussian_intensity(i); //intensity of ith beam at location of particle
+	//cout << inten << " ";
 	double det = detuning(i); //detuning of ith beam from atomic resonance, including doppler shift
 	double nbar = compute_nbar(i, inten, det);
-	struct CARandCtx* ctx = ca_rand_create();
-	add_radiation_pressure(i, ctx, nbar); //compute momentum kick and add to f (force) array
+	add_radiation_pressure(i, ctx[i], nbar); //compute momentum kick and add to f (force) array
+	//add_radiation_pressure(i, ctx, nbar);
 }
