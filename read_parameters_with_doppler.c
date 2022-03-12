@@ -1,10 +1,21 @@
 #include "read_parameters_with_doppler.h"
 #include "array2d.h"
+#include "ca_rand.h"
+#include "dSFMT/dSFMT.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 #include <string.h>
 #include <stdbool.h>
+#include <random>
+#include <iostream>
+
+using namespace std;
+
+
+//struct CARandCtx* ctx_test[5];
+//struct CARandCtx* this_ctx;
 
 void initialize(const char *filename){
 	FILE *f;
@@ -249,6 +260,8 @@ void initialize(const char *filename){
         omegaR_global = omegaR;
         phi0_global = phi0;
         phi_global = phi0;
+	//gamma0_global = 2.0 * M_PI * 18*pow(10,6);
+	hbar_global = 1.0*pow(10,-34);
 
 
 	//initialize forces array with all zeros
@@ -260,6 +273,11 @@ void initialize(const char *filename){
 	}
 	
 	//read cooling laser data
+	double gamma0_arr[1];
+	getline(&line, &len, f);
+	str_to_double(gamma0_arr, line, 1);
+	gamma0_global = gamma0_arr[0];
+
 	int num_beams = 0;	
 	getline(&line, &len, f);
         j = strlen(line);
@@ -276,10 +294,12 @@ void initialize(const char *filename){
 	double beam_khaty[num_beams];
 	double beam_khatz[num_beams];
 	double beam_waist[num_beams];
-	double beam_disp[num_beams];
+	double beam_dispx[num_beams];
+	double beam_dispy[num_beams];
+	double beam_dispz[num_beams];
 	double beam_det[num_beams];
 
-	for(int i = 0; i < 7; i++)
+	for(int i = 0; i < 9; i++)
 	{
 		if (i==0){
                         printf("%s", line);
@@ -328,13 +348,31 @@ void initialize(const char *filename){
 		if (i==5){
                         getline(&line, &len, f);
                         printf("%s", line);
-                        str_to_double(beam_disp, line, num_beams);  
+                        str_to_double(beam_dispx, line, num_beams);  
                         for (int i = 0; i< num_beams; i++)
-                                printf("%f ", beam_disp[i]);
+                                printf("%f ", beam_dispx[i]);
                         printf("\n");
                 }
 
 		if (i==6){
+                        getline(&line, &len, f);
+                        printf("%s", line);
+                        str_to_double(beam_dispy, line, num_beams);
+                        for (int i = 0; i< num_beams; i++)
+                                printf("%f ", beam_dispy[i]);
+                        printf("\n");
+                }
+
+		if (i==7){
+                        getline(&line, &len, f);
+                        printf("%s", line);
+                        str_to_double(beam_dispz, line, num_beams);
+                        for (int i = 0; i< num_beams; i++)
+                                printf("%f ", beam_dispz[i]);
+                        printf("\n");
+                }
+
+		if (i==8){
                         getline(&line, &len, f);
                         printf("%s", line);
                         str_to_double(beam_det, line, num_beams);  
@@ -346,7 +384,7 @@ void initialize(const char *filename){
 
 	}
 
-	arr_beams.Initialize(7, num_beams); /*rows correspond to pos (x,y,z), vel (x,y,z), q, m, omegaB*/
+	arr_beams.Initialize(9, num_beams); /*rows correspond to pos (x,y,z), vel (x,y,z), q, m, omegaB*/
         for(int i = 0; i<num_beams; i++){
                 arr_beams(0,i) = beam_S0[i];
         }
@@ -363,11 +401,61 @@ void initialize(const char *filename){
                 arr_beams(4,i) = beam_waist[i];
         }
 	for(int i = 0; i<num_beams; i++){
-                arr_beams(5,i) = beam_disp[i];
+                arr_beams(5,i) = beam_dispx[i];
         }
 	for(int i = 0; i<num_beams; i++){
-                arr_beams(6,i) = beam_det[i];
+                arr_beams(6,i) = beam_dispy[i];
         }
+	for(int i = 0; i<num_beams; i++){
+                arr_beams(7,i) = beam_dispz[i];
+        }
+	for(int i = 0; i<num_beams; i++){
+                arr_beams(8,i) = beam_det[i];
+        }
+
+	std::random_device rd;
+        std::mt19937 gen(rd()); //rd is the seed for the mt19937 instance
+        std::uniform_int_distribution<std::mt19937::result_type> dist(1,1000000);
+
+	//unused code for populating Arr2d with random seeds for each (particle, beam) pair
+	//seeds_global.Initialize(particles_global, beams_global);
+	/*for(int i =0; i< particles_global; i++)
+        {
+                for(int j=0; j< beams_global; j++)
+                {
+                        seeds_global(i,j) = dist(gen);
+			cout << "SEED: " << seeds_global(i,j);
+                }
+        }*/
+
+	seed_global = dist(gen);
+	cout<<"SEED: " << seed_global<< "\n";
+	ctx_global = ca_rand_create();
+	ca_rand_seed(ctx_global, seed_global);
+
+
+
+	/*for(int i =0; i< particles_global; i++)
+        {
+                for(int j=0; j< beams_global; i++)
+                {
+                        this_ctx = ca_rand_create();
+                        //struct CARandCtx this_ctx = NULL;
+			//cout << "this seed: " << seeds_global(i,j);
+			//ctx_global.push_back(this_ctx);
+                        //ca_rand_seed(ctx_global[i*j+i], seeds_global(i,j));
+			//ca_rand_destroy(&this_ctx);
+                }
+        }*/
+	/*for (int i = 0; i< 5;i++)
+	{	
+		//struct CARandCtx* ctxx = ca_rand_create();
+		ctx_test[i] = ca_rand_create();
+		ca_rand_seed(ctx_test[i], seeds_global(i,0));
+	}*/
+
+
+
 
 }
 

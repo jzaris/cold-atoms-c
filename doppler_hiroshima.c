@@ -37,20 +37,20 @@ double S0[num_beams] = {0.1,0.1,0.1,0.1,0.1,0.1};
 double k[num_beams][3] = {k_const,0.0,0.0,-1*k_const,0.0,0.0, 0.0,k_const,0.0,0.0,-1*k_const,0.0, 0.0,0.0,k_const,0.0,0.0,-1*k_const};
 double hbar_k[num_beams][3] = {k_const*hbar,0.0,0.0,-1*k_const*hbar,0.0,0.0, 0.0,k_const*hbar,0.0,0.0,-1*k_const*hbar,0.0, 0.0,0.0,k_const*hbar,0.0,0.0,-1*k_const*hbar}; 
 double gam[num_beams] = {gamma_const, gamma_const, gamma_const, gamma_const, gamma_const, gamma_const};
-double sigma[num_beams] = {1.0*pow(10,-3),1.0*pow(10,-3), 1.0*pow(10,-3),1.0*pow(10,-3), 1.0*pow(10,-3),1.0*pow(10,-3)};  
+double sigma[num_beams] = {1.0*pow(10,-3),1.0*pow(10,-3), 1.0*pow(10,-1),1.0*pow(10,-1), 1.0*pow(10,-1),1.0*pow(10,-1)};  
 //double delta0[num_beams] = {-0.5*gam[0],-0.5*gam[1]}; //detuning in Hz
 double delta0[num_beams] = {-0.5*gamma_const,-0.5*gamma_const, -0.5*gamma_const,-0.5*gamma_const, -0.5*gamma_const,-0.5*gamma_const}; 
 ////////
 
-int seed[num_beams];
-//int seed;
+//int seed[num_beams];
+int seed;
 
 struct CARandCtx {
         dsfmt_t dsfmt;
 };
 
-struct CARandCtx* ctx[num_beams];
-//struct CARandCtx* ctx;
+//struct CARandCtx* ctx[num_beams];
+struct CARandCtx* ctx;
 
 int main()
 {
@@ -58,21 +58,21 @@ int main()
 	std::random_device rd;
         std::mt19937 gen(rd()); //rd is the seed for the mt19937 instance
         std::uniform_int_distribution<std::mt19937::result_type> dist(1,1000000); 
-        for(int i=0;i<num_beams;i++){
+        /*for(int i=0;i<num_beams;i++){
 		seed[i] =  dist(gen);
 		cout << "seed: " << seed[i];
-	}
+	}*/
 	
-	//seed = dist(gen);
+	seed = dist(gen);
 
-        for (int i =0; i < num_beams; i++){
+        /*for (int i =0; i < num_beams; i++){
                 ctx[i] = ca_rand_create();
 		ca_rand_seed(ctx[i], seed[i]);
 		//cout << "seed: " << seed[i];
-        }
+        }*/
 	
-	//ctx = ca_rand_create();
-	//ca_rand_seed(ctx, seed);
+	ctx = ca_rand_create();
+	ca_rand_seed(ctx, seed);
 
 	
 	//cout << k[1][0] << " ";
@@ -163,6 +163,12 @@ double detuning(int i)
 
 double compute_nbar(int i, double inten, double det)
 {
+	//double this_nbar = dt * scattering_rate(i, inten, det);
+        //cout << this_nbar << " ";
+	//cout << dt << " ";
+	//double this_rate = scattering_rate(i, inten,det);
+        //cout << this_rate << " ";
+	//cout << det<< " ";	
 	return dt * scattering_rate(i, inten, det);
 }
 
@@ -170,6 +176,7 @@ double scattering_rate(int i, double inten, double det)
 {
 	double nu = gam[i] / (2*M_PI);
 	double half_gamma_squared = 0.25*gam[i]*gam[i];
+	//cout << gam[i]<< " ";
 	double rate =  inten*nu*half_gamma_squared / (half_gamma_squared*(1.0+2.0*inten)+det*det);
 	//cout << "scat. rate: " << rate << " ";
 	return rate;
@@ -228,7 +235,7 @@ static void add_radiation_pressure_small_n(int i,
 	//std::random_device rd;
 	//std::mt19937 gen(rd());
 	//std::normal_distribution<> normal_dist{0.0,1.0};  
-	//cout << n;
+	//cout << n << " ";
         if (0 == n) return;
 	//cout << "PASS";
         assert(n <= CA_LARGE_N);
@@ -272,13 +279,16 @@ static void add_radiation_pressure_small_n(int i,
                 recoil[l] *= hbar_k_nrm;
 		//cout << "recx: " << recoil[0] << " recy: " << recoil[1] << " recz: " << recoil[2] << " ";
         }
-	//cout << "recx: " << recoil[0] << " ";
+	//cout << recoil[0] << " ";
 	//cout << "recy: " << recoil[1] << " ";
 	//cout << "recz: " << recoil[2] << " ";
 	//cout << "pass5 ";
         for (l = 0; l < 3; ++l) {
 		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
-                f[l] += n * hbar_k[i][l] + recoil[l];
+                //cout << n << " ";
+		//cout << hbar_k[i][l]<< " ";
+		//cout << recoil[l] << " ";
+		f[l] += n * hbar_k[i][l] + recoil[l];
         }
 }
 
@@ -295,6 +305,7 @@ static void add_radiation_pressure_large_n(int i,
         ca_rand_gaussian(ctx, 3, 0.0, hbar_k_nrm * sqrt(n / 3.0), recoil);
         for (l = 0; l < 3; ++l) {
 		//cout << n << " " << hbar_k[i][l] << " " << recoil[l] <<" ";
+		//cout << n << " ";
                 f[l] += n * hbar_k[i][l] + recoil[l];
         }
 }
@@ -307,6 +318,7 @@ void Radiation_Pressure(int i)
 	//cout << inten << " ";
 	double det = detuning(i); //detuning of ith beam from atomic resonance, including doppler shift
 	double nbar = compute_nbar(i, inten, det);
-	add_radiation_pressure(i, ctx[i], nbar); //compute momentum kick and add to f (force) array
+	//cout << nbar << " ";
+	add_radiation_pressure(i, ctx, nbar); //compute momentum kick and add to f (force) array
 	//add_radiation_pressure(i, ctx, nbar);
 }
