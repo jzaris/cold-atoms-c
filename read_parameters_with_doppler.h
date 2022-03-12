@@ -2,6 +2,8 @@
 #define READ_PARAMETERS_H
 
 #include "array2d.h"
+#include "ca_rand.h"
+#include "dSFMT/dSFMT.h"
 #include <vector>
 #include <math.h>
 //#include <fstream>
@@ -13,6 +15,13 @@
 #else
 #define GLOBALS_EXT extern
 #endif
+
+/*
+struct CARandCtx {
+        dsfmt_t dsfmt;
+};*/
+
+
 
 GLOBALS_EXT double dt_global;
 GLOBALS_EXT double duration_global;
@@ -27,6 +36,12 @@ GLOBALS_EXT double phi_global;
 GLOBALS_EXT Arr2d arr;
 GLOBALS_EXT int beams_global;
 GLOBALS_EXT Arr2d arr_beams;
+GLOBALS_EXT double gamma0_global;
+GLOBALS_EXT double hbar_global;
+//GLOBALS_EXT Arr2d seeds_global;
+GLOBALS_EXT int seed_global;
+//GLOBALS_EXT std::vector<CARandCtx*> ctx_global;
+GLOBALS_EXT CARandCtx* ctx_global;
 GLOBALS_EXT Arr2d forces;
 GLOBALS_EXT std::vector<Arr2d> vec;
 

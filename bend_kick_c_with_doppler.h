@@ -11,6 +11,8 @@ void ca_bend_kick_update_vector(double time);
 
 void run_trap_potential(double kz);
 
+void run_doppler_only();
+
 void run_trap_coulomb(double kz);
 
 void trap_force(double kz);
@@ -30,5 +32,27 @@ void write_to_outfile();
 void write_beam_params();
 
 void reset_forces();
+
+void doppler_force();
+
+void Radiation_Pressure(int beam, int ion, double dt);
+
+double gaussian_intensity(int beam, int ion);
+
+double detuning(int beam, int ion);
+
+double compute_nbar(double dt, double inten, double det);
+
+double scattering_rate(double inten, double det);
+
+void add_radiation_pressure(int beam, int ion, struct CARandCtx* ctx, double nbar);
+
+static void add_radiation_pressure_one(int beam, int ion, struct CARandCtx* ctx, double hbar_k_nrm, double nbar);
+
+static void add_radiation_pressure_small_n(int beam, int ion,
+        struct CARandCtx* ctx,
+        double hbar_k_nrm,
+        int n);
+
 
 #endif
